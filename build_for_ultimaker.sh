@@ -5,6 +5,8 @@ MODULE_PATH="$(pwd)/inotify"
 
 init() {
 	git submodule update --init --recursive
+        # ugly hack to remove nose , which is a test only dependency.
+        truncate -s 0 ${MODULE_PATH}/requirements.txt
 }
 
 build() {
