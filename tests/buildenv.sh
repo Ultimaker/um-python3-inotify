@@ -1,2 +1,8 @@
-#!/usr/bin/env bash
+#!/usr/bin/sh
+
+set -eu
+
+python3 setup.py --command-packages=stdeb.command bdist_deb
+
 exit 0
+

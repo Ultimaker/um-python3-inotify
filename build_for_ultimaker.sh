@@ -1,20 +1,55 @@
 #!/bin/sh
+#
+# SPDX-License-Identifier: AGPL-3.0+
+#
+# Copyright (C) 2018 Ultimaker B.V.
+# Copyright (C) 2018 Raymond Siudak <r.siudak@ultimaker.com>
+#
 
-SRC_PATH="$(pwd)"
-MODULE_PATH="$(pwd)/inotify"
+CI_REGISTRY_IMAGE="${CI_REGISTRY_IMAGE:-registry.gitlab.com/ultimaker_bv/um-python3-inotify}"
+CI_REGISTRY_IMAGE_TAG="${CI_REGISTRY_IMAGE_TAG:-latest}"
 
-init() {
-	git submodule update --init --recursive
-        # ugly hack to remove nose , which is a test only dependency.
-        truncate -s 0 ${MODULE_PATH}/requirements.txt
+WORKDIR="${WORKDIR:-/build}"
+
+set -eu
+
+FAKE_WHOAMI="$(mktemp --suffix=.sh)"
+cleanup() {
+	rm "${FAKE_WHOAMI}"
 }
 
-build() {
-	cd "${MODULE_PATH}" &&
-	python3 setup.py --command-packages=stdeb.command bdist_deb &&
-	cp deb_dist/python3-inotify_*.deb "${SRC_PATH}/"
-	cd "${SRC_PATH}"
+fake_whoami() {
+	cat <<- EOT > "${FAKE_WHOAMI}"
+		#!/bin/sh
+
+		if [ "\$(id -u)" -ge 1000 ]; then
+		  echo "$(whoami)"
+		else
+		  whoami "\${@}"
+		fi
+	EOT
+
+	chmod +x "${FAKE_WHOAMI}"
 }
 
-init
-build
+trap cleanup EXIT
+
+git submodule update --init --recursive
+
+if ! command -V docker; then
+	echo "Docker not found, attempting native build."
+
+	./build.sh "${@}"
+	exit 0
+fi
+
+echo "Starting build using ${CI_REGISTRY_IMAGE}:${CI_REGISTRY_IMAGE_TAG}."
+
+fake_whoami
+docker run --rm -i -t -h "$(hostname)" -u "$(id -u):$(id -g)" \
+	   -e "MAKEFLAGS=-j$(($(getconf _NPROCESSORS_ONLN) - 1))" \
+	   -v "$(pwd):${WORKDIR}" \
+	   -v "${FAKE_WHOAMI}:/usr/bin/whoami" \
+	   -w "${WORKDIR}" \
+	   "${CI_REGISTRY_IMAGE}:${CI_REGISTRY_IMAGE_TAG}" \
+	   ./build.sh "${@}"

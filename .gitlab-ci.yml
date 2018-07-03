@@ -1,7 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0+
 #
-# Copyright (C) 2018 Ultimaker B.V.
-# Copyright (C) 2018 Raymond Siudak <r.siudak@ultimaker.com>
+# Copyright (C) 2018 Ultimaker B.V. <software-embedded-platform@ultimaker.com>
 #
 # GitLab CI package build is split up into two parts.
 # * Build environment: creates the docker image that is needed for package generation
@@ -37,6 +36,11 @@ lint package build script:
   script:
   - shellcheck -C -f tty -s sh build.sh
 
+lint local build script:
+  <<: *shell_linting
+  script:
+  - shellcheck -C -f tty -s sh build_for_ultimaker.sh
+
 # Build environment
 # =================
 .build environment template: &buildenv_common
@@ -60,8 +64,8 @@ verify build environment:
 
 push build environment:
   <<: *buildenv_common
-  #  except:
-  #  - /^(?!master$)/
+  except:
+  - /^(?!master$)/
   stage: push
   script:
   - docker login -u gitlab-ci-token -p "$CI_JOB_TOKEN" "$CI_REGISTRY"
