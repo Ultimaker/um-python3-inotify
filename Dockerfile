@@ -9,4 +9,5 @@ RUN apt-get update && \
         python3-stdeb && \
     rm -r /var/lib/apt/lists/*
 
-COPY tests tests/
+COPY tests/buildenv.sh /tests/buildenv.sh
+COPY tests/setup.py /tests/setup.py
