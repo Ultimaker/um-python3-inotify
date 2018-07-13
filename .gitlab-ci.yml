@@ -16,34 +16,34 @@ stages:
 
 # Common requisites
 # ==========
-.parameters_template: &parameters_common
+.parameters common: &parameters_common
   tags:
   - embedded
   - docker
 
-.shell_lint_template: &shell_linting
+.shell linting common: &shell_linting_common
   <<: *parameters_common
   image: registry.hub.docker.com/koalaman/shellcheck-alpine:stable
   stage: lint
 
 lint build environment:
-  <<: *shell_linting
+  <<: *shell_linting_common
   script:
   - shellcheck -C -f tty -s sh tests/buildenv.sh
 
 lint package build script:
-  <<: *shell_linting
+  <<: *shell_linting_common
   script:
   - shellcheck -C -f tty -s sh build.sh
 
 lint local build script:
-  <<: *shell_linting
+  <<: *shell_linting_common
   script:
   - shellcheck -C -f tty -s sh build_for_ultimaker.sh
 
 # Build environment
 # =================
-.build environment template: &buildenv_common
+.build environment common: &environment_common
   <<: *parameters_common
   image: registry.hub.docker.com/library/docker:stable
   only:
@@ -51,19 +51,19 @@ lint local build script:
     - $CI_COMMIT_MESSAGE =~ /dockerfile/i
 
 prepare build environment:
-  <<: *buildenv_common
+  <<: *environment_common
   stage: prepare
   script:
   - docker build --rm -t "$CI_COMMIT_SHA:$CI_PIPELINE_ID" .
 
 verify build environment:
   stage: verify
-  <<: *buildenv_common
+  <<: *environment_common
   script:
-    - docker run --rm "$CI_COMMIT_SHA:$CI_PIPELINE_ID" /tests/buildenv.sh
+    - docker run --rm -w /tests "$CI_COMMIT_SHA:$CI_PIPELINE_ID" ./buildenv.sh
 
 push build environment:
-  <<: *buildenv_common
+  <<: *environment_common
   except:
   - /^(?!master$)/
   stage: push
@@ -75,7 +75,7 @@ push build environment:
   - docker push "$CI_REGISTRY_IMAGE:latest"
 
 cleanup build environment:
-  <<: *buildenv_common
+  <<: *environment_common
   stage: cleanup
   when: always
   script:
@@ -86,7 +86,7 @@ cleanup build environment:
 
 # Package generation
 # ==================
-.build pkg template: &pkg_common
+.build pkg common: &pkg_common
   <<: *parameters_common
   variables:
     GIT_SUBMODULE_STRATEGY: recursive
