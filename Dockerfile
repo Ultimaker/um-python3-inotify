@@ -13,11 +13,4 @@ RUN apt-get update && \
     apt-get clean && \
     rm -r /var/lib/apt/lists/*
 
-# Copy all files required for testing the build environment
-COPY tests/buildenv.sh /tests/buildenv.sh
-COPY tests/setup.py /tests/setup.py
-COPY tests/MANIFEST.in /tests/MANIFEST.in
-COPY tests/py3_only_pkg/__init__.py /tests/py3_only_pkg/__init__.py
-COPY tests/py3_only_pkg/py3_module.py /tests/py3_only_pkg/py3_module.py
-COPY tests/py3_only_pkg/README.rst /tests/py3_only_pkg/README.rst
-
+COPY tests/ /tests/
