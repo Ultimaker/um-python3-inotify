@@ -13,7 +13,7 @@ class MyBuild(build):
 setup(
     name='py3_only_pkg',
     packages=['py3_only_pkg'],
-    url=':https//github.com/Ultimaker/um-python3-inotify/tests',
+    url='https//github.com/Ultimaker/um-python3-inotify/tests',
     cmdclass={'build':MyBuild},
     author='Embedded platform team',
     author_email='software-embedded-platform@ultimaker.com',
