@@ -1,0 +1,71 @@
+From d29abea9cd44bc50d60ace5f236cb3da54420f7b Mon Sep 17 00:00:00 2001
+From: Olliver Schinagl <oliver@schinagl.nl>
+Date: Mon, 20 Aug 2018 15:47:12 +0200
+Subject: [PATCH] Support running without python-all with python3 only
+
+Currently, there's checks in place using with_python2 and with_python3
+except for the build_dsc helper. Here python2 support is hardcoded.
+
+Use the same helpers to specifically check for python2 or 3 support
+where needed removing the dependency on python3 only systems.
+
+Signed-off-by: Olliver Schinagl <oliver@schinagl.nl>
+---
+ stdeb/util.py | 41 +++++++++++++++++++++++++++++------------
+ 1 file changed, 29 insertions(+), 12 deletions(-)
+
+diff --git a/stdeb/util.py b/stdeb/util.py
+index aa38940..ff0ac98 100644
+--- a/stdeb/util.py
++++ b/stdeb/util.py
+@@ -1404,18 +1404,35 @@ def build_dsc(debinfo,
+                          'compatible with older versions of debhelper.'%(
+                     DH_MIN_VERS,))
+ 
+-        python_defaults_version_str = get_version_str('python-all')
+-        if len(python_defaults_version_str)==0:
+-            log.warn('This version of stdeb requires python-all >= %s, '
+-                     'but you do not have this package installed. '
+-                     'Could not check compatibility.'%PYTHON_ALL_MIN_VERS)
+-        else:
+-            if not dpkg_compare_versions(
+-                python_defaults_version_str, 'ge', PYTHON_ALL_MIN_VERS):
+-                log.warn('This version of stdeb requires python-all >= %s. '
+-                         'Use stdeb 0.6.0 or older to generate source packages '
+-                         'that use python-support.'%(
+-                    PYTHON_ALL_MIN_VERS,))
++        if debinfo.with_python2:
++            python_defaults_version_str = get_version_str('python-all')
++
++            if len(python_defaults_version_str)==0:
++                log.warn('This version of stdeb requires python-all >= %s, '
++                         'but you do not have this package installed. '
++                         'Could not check compatibility.'%PYTHON_ALL_MIN_VERS)
++            else:
++                if not dpkg_compare_versions(
++                    python_defaults_version_str, 'ge', PYTHON_ALL_MIN_VERS):
++                    log.warn('This version of stdeb requires python-all >= %s. '
++                             'Use stdeb 0.6.0 or older to generate source packages '
++                             'that use python-support.'%(
++                             PYTHON_ALL_MIN_VERS,))
++
++        if debinfo.with_python3:
++            python3_defaults_version_str = get_version_str('python3-all')
++
++            if len(python3_defaults_version_str)==0:
++                log.warn('This version of stdeb requires python3-all >= %s, '
++                         'but you do not have this package installed. '
++                         'Could not check compatibility.'%PYTHON_ALL_MIN_VERS)
++            else:
++                if not dpkg_compare_versions(
++                    python3_defaults_version_str, 'ge', PYTHON_ALL_MIN_VERS):
++                    log.warn('This version of stdeb requires python3-all >= %s. '
++                             'Use stdeb 0.6.0 or older to generate source packages '
++                             'that use python-support.'%(
++                             PYTHON_ALL_MIN_VERS,))
+ 
+     #    D. restore debianized tree
+     os.rename(fullpath_repackaged_dirname+'.debianized',
+-- 
+2.18.0
+

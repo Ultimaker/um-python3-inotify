@@ -1,4 +1,5 @@
 *
+!patches/0001-Support-running-without-python-all-with-python3-only.patch
 !tests/buildenv.sh
 !tests/setup.py
 !tests/MANIFEST.in
